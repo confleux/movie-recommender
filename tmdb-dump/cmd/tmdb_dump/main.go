@@ -26,18 +26,19 @@ func main() {
 	MovieService := service.NewMovieService(ApiClient)
 
 	for page := 1; page < cfg.PagesCount; page++ {
-		result, err := MovieService.FetchMovies(page)
-		if err != nil {
-			log.Fatalf("failed to fetch movies: %v", err)
+		select {
+		case <-time.After(2 * time.Second):
+			result, err := MovieService.FetchMovies(page)
+			if err != nil {
+				log.Fatalf("failed to fetch movies: %v", err)
+			}
+
+			insertedId, err := MovieRepository.InsertMoviesPage(result)
+			if err != nil {
+				log.Fatalf("failed to insert movie page: %v", err)
+			}
+
+			fmt.Printf("Successfully added %s (page: %d)", insertedId, page)
 		}
-
-		insertedId, err := MovieRepository.InsertMoviesPage(result)
-		if err != nil {
-			log.Fatalf("failed to insert movie page: %v", err)
-		}
-
-		fmt.Printf("Successfully added %s (page: %d)", insertedId, page)
-
-		time.Sleep(2 * time.Second) // We avoid 429
 	}
 }
