@@ -9,8 +9,9 @@ import (
 )
 
 type Config struct {
-	Mongo   MongoConfig
-	TmdbApi TmdbConfig
+	Mongo      MongoConfig
+	TmdbApi    TmdbConfig
+	PagesCount int `yaml:"pages_count"`
 }
 
 type MongoConfig struct {

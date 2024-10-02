@@ -25,7 +25,7 @@ func main() {
 
 	MovieService := service.NewMovieService(ApiClient)
 
-	for i := 1; i < 10; i++ {
+	for i := 1; i < cfg.PagesCount; i++ {
 		result, err := MovieService.FetchMovies(i)
 		if err != nil {
 			log.Fatalf("failed to fetch movies: %v", err)
