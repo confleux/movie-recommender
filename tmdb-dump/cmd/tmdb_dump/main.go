@@ -25,8 +25,8 @@ func main() {
 
 	MovieService := service.NewMovieService(ApiClient)
 
-	for i := 1; i < cfg.PagesCount; i++ {
-		result, err := MovieService.FetchMovies(i)
+	for page := 1; page < cfg.PagesCount; page++ {
+		result, err := MovieService.FetchMovies(page)
 		if err != nil {
 			log.Fatalf("failed to fetch movies: %v", err)
 		}
@@ -36,7 +36,7 @@ func main() {
 			log.Fatalf("failed to insert movie page: %v", err)
 		}
 
-		fmt.Printf("Successfully added %s (page: %d)", insertedId, i)
+		fmt.Printf("Successfully added %s (page: %d)", insertedId, page)
 
 		time.Sleep(2 * time.Second) // We avoid 429
 	}
