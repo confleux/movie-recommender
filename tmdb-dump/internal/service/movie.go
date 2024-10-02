@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"strconv"
 	"tmdb-dump/internal/api_client"
@@ -30,7 +31,7 @@ func (ms *MovieService) FetchMovies(page int) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("failed to fetch movies: %w", err)
 	}
 
-	if res.StatusCode != 200 {
+	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("response status is not ok: %d", res.StatusCode)
 	}
 
