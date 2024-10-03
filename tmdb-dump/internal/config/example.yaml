@@ -1,0 +1,8 @@
+mongo:
+  uri: "mongodb://localhost:27017"
+  database: "development"
+  collection: "tmdb-dump"
+tmdbapi:
+  base_url: "https://api.themoviedb.org"
+  token: "123abc"
+pages_count: 500
