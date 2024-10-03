@@ -9,7 +9,6 @@ import (
 	"tmdb-dump/internal/config"
 	"tmdb-dump/internal/db/mongodb"
 	mongodb_movie "tmdb-dump/internal/repository/mongodb"
-	"tmdb-dump/internal/service"
 )
 
 const (
@@ -30,8 +29,6 @@ func main() {
 
 	movieRepository := mongodb_movie.NewMovieRepository(mongoDB)
 
-	movieService := service.NewMovieService(apiClient)
-
 	for page := 1; page < cfg.PagesCount; page++ {
 		retryCount := 0
 		backoff := initialBackoff
@@ -40,7 +37,7 @@ func main() {
 		for {
 			select {
 			case <-time.After(backoff):
-				result, err := movieService.FetchMovies(page)
+				result, err := apiClient.GetMovies(page)
 				if err != nil {
 					retryCount++
 
