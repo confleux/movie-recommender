@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net/http"
 	"time"
 	"tmdb-dump/internal/api_client"
 	"tmdb-dump/internal/config"
@@ -25,7 +26,7 @@ func main() {
 		log.Fatalf("failed to create MongoDB: %v", err)
 	}
 
-	apiClient := api_client.NewApiClient(cfg.TmdbApi.BaseUrl, cfg.TmdbApi.Token)
+	apiClient := api_client.NewApiClient(cfg.TmdbApi.BaseUrl, cfg.TmdbApi.Token, &http.Client{})
 
 	movieRepository := mongodb_movie.NewMovieRepository(mongoDB)
 
@@ -48,7 +49,7 @@ func main() {
 					}
 
 					backoff = time.Duration(float64(backoff) * backoffCoefficient)
-					continue
+					continue backoffLoop
 				}
 
 				retryCount = 0

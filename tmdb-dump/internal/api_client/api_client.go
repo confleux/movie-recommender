@@ -7,12 +7,13 @@ import (
 )
 
 type ApiClient struct {
-	baseUrl string
-	token   string
+	baseUrl    string
+	token      string
+	httpClient *http.Client
 }
 
-func NewApiClient(baseUrl string, token string) *ApiClient {
-	return &ApiClient{baseUrl: baseUrl, token: token}
+func NewApiClient(baseUrl string, token string, httpClient *http.Client) *ApiClient {
+	return &ApiClient{baseUrl: baseUrl, token: token, httpClient: httpClient}
 }
 
 func (ac *ApiClient) Get(endpoint string, queryParams *url.Values) (*http.Response, error) {
@@ -31,7 +32,7 @@ func (ac *ApiClient) Get(endpoint string, queryParams *url.Values) (*http.Respon
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", ac.token))
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := ac.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed to do request: %w", err)
 	}
