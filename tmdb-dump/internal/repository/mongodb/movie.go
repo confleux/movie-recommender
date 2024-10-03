@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"go.mongodb.org/mongo-driver/v2/bson"
+	"tmdb-dump/internal/api_client"
 	"tmdb-dump/internal/db/mongodb"
 )
 
@@ -15,7 +16,7 @@ func NewMovieRepository(mongodb *mongodb.MongoDB) *MovieRepository {
 	return &MovieRepository{mongoDB: mongodb}
 }
 
-func (mr *MovieRepository) InsertMoviesPage(moviePage map[string]interface{}) (interface{}, error) {
+func (mr *MovieRepository) InsertMoviesPage(moviePage *api_client.GetMoviesResponse) (interface{}, error) {
 	doc, err := bson.Marshal(moviePage)
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal to bson: %w", err)

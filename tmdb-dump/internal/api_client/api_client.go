@@ -19,11 +19,35 @@ type ApiClient struct {
 	httpClient *http.Client
 }
 
+type GetMoviesResponse struct {
+	TotalPages   int     `json:"total_pages"`
+	TotalResults int     `json:"total_results"`
+	Page         int     `json:"page"`
+	Results      []Movie `json:"results"`
+}
+
+type Movie struct {
+	Id               int     `json:"id"`
+	VoteAverage      float64 `json:"vote_average"`
+	GenreIds         []int   `json:"genre_ids"`
+	OriginalTitle    string  `json:"original_title"`
+	ReleaseDate      string  `json:"release_date"`
+	Video            bool    `json:"video"`
+	VoteCount        int     `json:"vote_count"`
+	Adult            bool    `json:"adult"`
+	BackdropPath     string  `json:"backdrop_path"`
+	Overview         string  `json:"overview"`
+	PosterPath       string  `json:"poster_path"`
+	OriginalLanguage string  `json:"original_language"`
+	Popularity       float64 `json:"popularity"`
+	Title            string  `json:"title"`
+}
+
 func NewApiClient(baseUrl string, token string, httpClient *http.Client) *ApiClient {
 	return &ApiClient{baseUrl: baseUrl, token: token, httpClient: httpClient}
 }
 
-func (ac *ApiClient) GetMovies(page int) (map[string]interface{}, error) {
+func (ac *ApiClient) GetMovies(page int) (*GetMoviesResponse, error) {
 	u, err := url.Parse(fmt.Sprintf("%s%s", ac.baseUrl, getMoviesEndpoint))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse url: %w", err)
@@ -52,9 +76,10 @@ func (ac *ApiClient) GetMovies(page int) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("response status is not ok: %d", res.StatusCode)
 	}
 
-	body, err := io.ReadAll(res.Body)
+	var response GetMoviesResponse
+	err = json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read body: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal: %w", err)
 	}
 
 	_, err = io.Copy(io.Discard, res.Body)
@@ -62,15 +87,5 @@ func (ac *ApiClient) GetMovies(page int) (map[string]interface{}, error) {
 		return nil, fmt.Errorf("failed to copy to discard: %w", err)
 	}
 
-	var moviesPage map[string]interface{}
-	err = json.Unmarshal(body, &moviesPage)
-	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal: %w", err)
-	}
-
-	if moviesPage["status_code"] != nil {
-		return nil, fmt.Errorf("invalid status_code: %v", moviesPage["status_code"])
-	}
-
-	return moviesPage, nil
+	return &response, nil
 }
