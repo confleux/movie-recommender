@@ -11,11 +11,11 @@ import (
 )
 
 type MovieRepository struct {
-	mongoDB *mongodb.MongoDB
+	mongoConnection *mongodb.MongoConnection
 }
 
-func NewMovieRepository(mongodb *mongodb.MongoDB) *MovieRepository {
-	return &MovieRepository{mongoDB: mongodb}
+func NewMovieRepository(mongoConnection *mongodb.MongoConnection) *MovieRepository {
+	return &MovieRepository{mongoConnection: mongoConnection}
 }
 
 func (mr *MovieRepository) InsertMoviesPage(moviePage *api_client.GetMoviesResponse) (interface{}, error) {
@@ -24,7 +24,7 @@ func (mr *MovieRepository) InsertMoviesPage(moviePage *api_client.GetMoviesRespo
 		return "", fmt.Errorf("failed to marshal to bson: %w", err)
 	}
 
-	insertRes, err := mr.mongoDB.Collection.InsertOne(context.Background(), doc)
+	insertRes, err := mr.mongoConnection.Collection.InsertOne(context.Background(), doc)
 	if err != nil {
 		return "", fmt.Errorf("failed to insert doc: %w", err)
 	}
