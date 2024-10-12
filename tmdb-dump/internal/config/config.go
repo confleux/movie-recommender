@@ -10,6 +10,7 @@ import (
 
 type Config struct {
 	Mongo      MongoConfig
+	Postgres   PostgresConfig
 	TmdbApi    TmdbConfig
 	PagesCount int `yaml:"pages_count"`
 }
@@ -18,6 +19,10 @@ type MongoConfig struct {
 	Uri        string `yaml:"uri"`
 	Database   string `yaml:"database"`
 	Collection string `yaml:"collection"`
+}
+
+type PostgresConfig struct {
+	Uri string `yaml:"uri"`
 }
 
 type TmdbConfig struct {

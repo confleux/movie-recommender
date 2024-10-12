@@ -1,15 +1,17 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
+	"tmdb-dump/internal/repository/postgres"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"tmdb-dump/internal/api_client"
 	"tmdb-dump/internal/config"
-	"tmdb-dump/internal/db/mongodb"
-	mongodb_movie "tmdb-dump/internal/repository/mongodb"
 )
 
 const (
@@ -21,16 +23,23 @@ const (
 func main() {
 	cfg := config.MustLoad()
 
-	mongoDB, err := mongodb.NewMongoDB(cfg.Mongo.Uri, cfg.Mongo.Database, cfg.Mongo.Collection)
+	pool, err := pgxpool.New(context.Background(), cfg.Postgres.Uri)
 	if err != nil {
-		log.Fatalf("failed to create MongoDB: %v", err)
+		log.Fatalf("unable to init postges connection: %v", err)
 	}
+	defer pool.Close()
+
+	//mongoDB, err := mongodb.NewMongoConnection(cfg.Mongo.Uri, cfg.Mongo.Database, cfg.Mongo.Collection)
+	//if err != nil {
+	//	log.Fatalf("failed to create MongoDB: %v", err)
+	//}
 
 	apiClient := api_client.NewApiClient(cfg.TmdbApi.BaseUrl, cfg.TmdbApi.Token, &http.Client{})
 
-	movieRepository := mongodb_movie.NewMovieRepository(mongoDB)
+	//movieRepository := mongodb_movie.NewMovieRepository(mongoDB)
+	movieRepository := postgres.NewMovieRepository(pool)
 
-	for page := 1; page < cfg.PagesCount; page++ {
+	for page := 1; page <= cfg.PagesCount; page++ {
 		retryCount := 0
 		backoff := initialBackoff
 
@@ -53,12 +62,21 @@ func main() {
 				retryCount = 0
 				backoff = initialBackoff
 
-				insertedId, err := movieRepository.InsertMoviesPage(result)
-				if err != nil {
-					log.Fatalf("failed to insert movie page: %v", err)
+				for _, v := range result.Results {
+					id, err := movieRepository.InsertMovie(context.Background(), v)
+					if err != nil {
+						log.Fatalf("%v", err)
+					}
+					fmt.Println(id)
 				}
 
-				fmt.Printf("Successfully added %s (page: %d)\n", insertedId, page)
+				//insertedId, err := movieRepository.InsertMoviesPage(result)
+
+				//if err != nil {
+				//	log.Fatalf("failed to insert movie page: %v", err)
+				//}
+				//
+				//fmt.Printf("Successfully added %s (page: %d)\n", insertedId, page)
 
 				break backoffLoop
 			}
