@@ -29,14 +29,8 @@ func main() {
 	}
 	defer pool.Close()
 
-	//mongoDB, err := mongodb.NewMongoConnection(cfg.Mongo.Uri, cfg.Mongo.Database, cfg.Mongo.Collection)
-	//if err != nil {
-	//	log.Fatalf("failed to create MongoDB: %v", err)
-	//}
-
 	apiClient := api_client.NewApiClient(cfg.TmdbApi.BaseUrl, cfg.TmdbApi.Token, &http.Client{})
 
-	//movieRepository := mongodb_movie.NewMovieRepository(mongoDB)
 	movieRepository := postgres.NewMovieRepository(pool)
 
 	for page := 1; page <= cfg.PagesCount; page++ {
@@ -69,14 +63,6 @@ func main() {
 					}
 					fmt.Println(id)
 				}
-
-				//insertedId, err := movieRepository.InsertMoviesPage(result)
-
-				//if err != nil {
-				//	log.Fatalf("failed to insert movie page: %v", err)
-				//}
-				//
-				//fmt.Printf("Successfully added %s (page: %d)\n", insertedId, page)
 
 				break backoffLoop
 			}
