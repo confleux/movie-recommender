@@ -50,7 +50,7 @@ func NewApiClient(baseUrl string, token string, httpClient *http.Client) *ApiCli
 func (ac *ApiClient) GetMovies(page int) (*GetMoviesResponse, error) {
 	u, err := url.Parse(fmt.Sprintf("%s%s", ac.baseUrl, getMoviesEndpoint))
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse url: %w", err)
+		return nil, fmt.Errorf("parse url: %w", err)
 	}
 
 	queryParams := url.Values{}
@@ -60,7 +60,7 @@ func (ac *ApiClient) GetMovies(page int) (*GetMoviesResponse, error) {
 
 	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to build http request: %w", err)
+		return nil, fmt.Errorf("build http request: %w", err)
 	}
 
 	req.Header.Set("Accept", "application/json")
@@ -68,7 +68,7 @@ func (ac *ApiClient) GetMovies(page int) (*GetMoviesResponse, error) {
 
 	res, err := ac.httpClient.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to do request: %w", err)
+		return nil, fmt.Errorf("do request: %w", err)
 	}
 	defer res.Body.Close()
 
@@ -79,12 +79,12 @@ func (ac *ApiClient) GetMovies(page int) (*GetMoviesResponse, error) {
 	var response GetMoviesResponse
 	err = json.NewDecoder(res.Body).Decode(&response)
 	if err != nil {
-		return nil, fmt.Errorf("failed to unmarshal: %w", err)
+		return nil, fmt.Errorf("unmarshal json: %w", err)
 	}
 
 	_, err = io.Copy(io.Discard, res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to copy to discard: %w", err)
+		return nil, fmt.Errorf("copy to discard: %w", err)
 	}
 
 	return &response, nil

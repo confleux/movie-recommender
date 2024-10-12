@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -59,9 +58,8 @@ func main() {
 				for _, v := range result.Results {
 					id, err := movieRepository.InsertMovie(context.Background(), v)
 					if err != nil {
-						log.Fatalf("%v", err)
+						log.Fatalf("Failed to insert %d movie: %v", id, err)
 					}
-					fmt.Println(id)
 				}
 
 				break backoffLoop

@@ -21,12 +21,12 @@ func NewMovieRepository(mongoConnection *mongodb.MongoConnection) *MovieReposito
 func (mr *MovieRepository) InsertMoviesPage(moviePage *api_client.GetMoviesResponse) (interface{}, error) {
 	doc, err := bson.Marshal(moviePage)
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal to bson: %w", err)
+		return "", fmt.Errorf("marshal to bson: %w", err)
 	}
 
 	insertRes, err := mr.mongoConnection.Collection.InsertOne(context.Background(), doc)
 	if err != nil {
-		return "", fmt.Errorf("failed to insert doc: %w", err)
+		return "", fmt.Errorf("insert doc: %w", err)
 	}
 
 	return insertRes.InsertedID, nil
