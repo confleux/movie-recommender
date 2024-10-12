@@ -3,7 +3,9 @@ package postgres
 import (
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	"tmdb-dump/internal/api_client"
 )
 

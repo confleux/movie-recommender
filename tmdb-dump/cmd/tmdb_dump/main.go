@@ -6,12 +6,12 @@ import (
 	"log"
 	"net/http"
 	"time"
-	"tmdb-dump/internal/repository/postgres"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"tmdb-dump/internal/api_client"
 	"tmdb-dump/internal/config"
+	"tmdb-dump/internal/repository/postgres"
 )
 
 const (
