@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -18,8 +17,6 @@ const (
 	initialBackoff     = 100 * time.Millisecond
 	maxRequestRetries  = 10
 	backoffCoefficient = 1.5
-
-	pgUniqueViolationCode = "23505"
 )
 
 func main() {
@@ -27,7 +24,7 @@ func main() {
 
 	pool, err := pgxpool.New(context.Background(), cfg.Postgres.Uri)
 	if err != nil {
-		log.Fatalf("unable to init postges connection: %v", err)
+		log.Fatalf("postges connection: %v", err)
 	}
 	defer pool.Close()
 
@@ -67,9 +64,9 @@ func main() {
 						log.Fatalf("Failed to insert movie: %v", err)
 					}
 
-					fmt.Printf("Inserted movie with id: %d\n", id)
+					log.Printf("Inserted movie with id: %d\n", id)
 				}
-				fmt.Printf("Processed page: %d (%d movies)\n", page, len(result.Results))
+				log.Printf("Processed page: %d (%d movies)\n", page, len(result.Results))
 
 				break backoffLoop
 			}
@@ -78,5 +75,5 @@ func main() {
 
 	elapsed := time.Since(start)
 
-	fmt.Printf("TMDB Dump took: %s", elapsed)
+	log.Printf("TMDB Dump took: %s", elapsed)
 }
