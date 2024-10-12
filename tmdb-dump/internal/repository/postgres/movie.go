@@ -21,6 +21,8 @@ func (mr *MovieRepository) InsertMovie(ctx context.Context, movie api_client.Mov
 	query := `
 		INSERT INTO movies_info (id, title, release_date, vote_average, vote_count, is_adult, poster_path)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (id)
+		DO UPDATE SET vote_average = EXCLUDED.vote_average, vote_count = EXCLUDED.vote_count
 		RETURNING id
 	`
 

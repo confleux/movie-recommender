@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"tmdb-dump/internal/api_client"
@@ -62,24 +60,16 @@ func main() {
 				retryCount = 0
 				backoff = initialBackoff
 
-			insertMoviesLoop:
 				for _, v := range result.Results {
 					id, err := movieRepository.InsertMovie(context.Background(), v)
 
 					if err != nil {
-						var pgErr *pgconn.PgError
-						if errors.As(err, &pgErr) {
-							if pgErr.Code == pgUniqueViolationCode {
-								continue insertMoviesLoop
-							}
-						}
-
 						log.Fatalf("Failed to insert movie: %v", err)
 					}
 
 					fmt.Printf("Inserted movie with id: %d\n", id)
 				}
-				fmt.Printf("Processed page: %d\n", page)
+				fmt.Printf("Processed page: %d (%d movies)\n", page, len(result.Results))
 
 				break backoffLoop
 			}
