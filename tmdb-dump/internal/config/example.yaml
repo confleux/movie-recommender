@@ -2,6 +2,8 @@ mongo:
   uri: "mongodb://localhost:27017"
   database: "development"
   collection: "tmdb-dump"
+postgres:
+  uri: "postgresql://user:password@localhost:5432/tmdb-dump"
 tmdbapi:
   base_url: "https://api.themoviedb.org"
   token: "123abc"

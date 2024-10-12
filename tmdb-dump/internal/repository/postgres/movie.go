@@ -24,9 +24,15 @@ func (mr *MovieRepository) InsertMovie(ctx context.Context, movie api_client.Mov
 		RETURNING id
 	`
 
+	var release_date interface{} = movie.ReleaseDate
+
+	if release_date == "" {
+		release_date = nil
+	}
+
 	var id int
 
-	if err := mr.Pool.QueryRow(ctx, query, movie.Id, movie.Title, movie.ReleaseDate, movie.VoteAverage, movie.VoteCount, movie.Adult, movie.PosterPath).Scan(&id); err != nil {
+	if err := mr.Pool.QueryRow(ctx, query, movie.Id, movie.Title, release_date, movie.VoteAverage, movie.VoteCount, movie.Adult, movie.PosterPath).Scan(&id); err != nil {
 		return 0, fmt.Errorf("insert movie: %w", err)
 	}
 

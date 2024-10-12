@@ -2,10 +2,13 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"tmdb-dump/internal/api_client"
@@ -15,8 +18,10 @@ import (
 
 const (
 	initialBackoff     = 100 * time.Millisecond
-	maxRequestRetries  = 5
+	maxRequestRetries  = 10
 	backoffCoefficient = 1.5
+
+	pgUniqueViolationCode = "23505"
 )
 
 func main() {
@@ -32,6 +37,8 @@ func main() {
 
 	movieRepository := postgres.NewMovieRepository(pool)
 
+	start := time.Now()
+
 	for page := 1; page <= cfg.PagesCount; page++ {
 		retryCount := 0
 		backoff := initialBackoff
@@ -45,7 +52,7 @@ func main() {
 					retryCount++
 
 					if retryCount > maxRequestRetries {
-						log.Fatalf("%v", err)
+						log.Fatalf("max request retries reached: %v", err)
 					}
 
 					backoff = time.Duration(float64(backoff) * backoffCoefficient)
@@ -55,15 +62,31 @@ func main() {
 				retryCount = 0
 				backoff = initialBackoff
 
+			insertMoviesLoop:
 				for _, v := range result.Results {
 					id, err := movieRepository.InsertMovie(context.Background(), v)
+
 					if err != nil {
-						log.Fatalf("Failed to insert %d movie: %v", id, err)
+						var pgErr *pgconn.PgError
+						if errors.As(err, &pgErr) {
+							if pgErr.Code == pgUniqueViolationCode {
+								continue insertMoviesLoop
+							}
+						}
+
+						log.Fatalf("Failed to insert movie: %v", err)
 					}
+
+					fmt.Printf("Inserted movie with id: %d\n", id)
 				}
+				fmt.Printf("Processed page: %d\n", page)
 
 				break backoffLoop
 			}
 		}
 	}
+
+	elapsed := time.Since(start)
+
+	fmt.Printf("TMDB Dump took: %s", elapsed)
 }
