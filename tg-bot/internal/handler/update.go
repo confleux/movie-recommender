@@ -28,68 +28,131 @@ func NewUpdateHandler(bot *tgbotapi.BotAPI, movieService *service.MovieService) 
 	return &UpdateHandler{bot: bot, movieService: movieService, commands: commands}
 }
 
-func (uh *UpdateHandler) ProcessUpdate(update *tgbotapi.Update) {
+func (uh *UpdateHandler) ProcessUpdate(update *tgbotapi.Update) (*tgbotapi.Message, error) {
 	if update.Message.IsCommand() {
 		switch update.Message.Command() {
 		case "start":
-			uh.startCommand(update)
+			message, err := uh.startCommand(update)
+			if err != nil {
+				return nil, fmt.Errorf("start command: %w", err)
+			}
+
+			return message, nil
 		case "help":
-			uh.helpCommand(update)
+			message, err := uh.helpCommand(update)
+			if err != nil {
+				return nil, fmt.Errorf("help command: %w", err)
+			}
+
+			return message, nil
 		case "random":
-			uh.randomCommand(update)
+			message, err := uh.randomCommand(update)
+			if err != nil {
+				return nil, fmt.Errorf("random command: %w", err)
+			}
+
+			return message, nil
 		default:
-			uh.defaultCommand(update)
+			message, err := uh.defaultCommand(update)
+			if err != nil {
+				return nil, fmt.Errorf("default command: %w", err)
+			}
+
+			return message, nil
 		}
 	} else {
-		uh.nonCommand(update)
+		message, err := uh.nonCommand(update)
+		if err != nil {
+			return nil, fmt.Errorf("non command: %w", err)
+		}
+
+		return message, nil
 	}
 }
 
-func (uh *UpdateHandler) startCommand(update *tgbotapi.Update) {
-	//msg := tgbotapi.NewMessage(update.Message.Chat.ID, "ГООООЛ")
-	url := tgbotapi.NewInputMediaPhoto(tgbotapi.FileURL("https://i.imgur.com/unQLJIb.jpg"))
-	mediaGroup := tgbotapi.NewMediaGroup(update.Message.Chat.ID, []interface{}{
-		url,
-		url,
-		url,
-		url,
-		url,
-	})
-	uh.bot.SendMediaGroup(mediaGroup)
-	//uh.bot.Send(url)
+func (uh *UpdateHandler) startCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, "ГООООЛ")
+
+	message, err := uh.bot.Send(messageConfig)
+	if err != nil {
+		return nil, fmt.Errorf("send message: %w", err)
+	}
+
+	return &message, nil
 }
 
-func (uh *UpdateHandler) helpCommand(update *tgbotapi.Update) {
-	msgMessage := "Here are available commands:\n"
+func (uh *UpdateHandler) helpCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+	messageText := "Here are available commands:\n"
 	for _, cmd := range uh.commands {
-		msgMessage += fmt.Sprintf("/%s - %s\n", cmd.name, cmd.description)
+		messageText += fmt.Sprintf("/%s - %s\n", cmd.name, cmd.description)
 	}
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, msgMessage)
-	uh.bot.Send(msg)
+
+	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, messageText)
+
+	message, err := uh.bot.Send(messageConfig)
+	if err != nil {
+		return nil, fmt.Errorf("send message: %w", err)
+	}
+
+	return &message, nil
 }
 
-func (uh *UpdateHandler) randomCommand(update *tgbotapi.Update) {
+func (uh *UpdateHandler) randomCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
 	movies, err := uh.movieService.GetRandomMovies(10)
 	if err != nil {
-		msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Failed to get movies")
-		uh.bot.Send(msg)
+		messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, "Failed to get movies")
+
+		message, err := uh.bot.Send(messageConfig)
+		if err != nil {
+			return nil, fmt.Errorf("send message: %w", err)
+		}
+
+		return &message, nil
 	}
 
-	msgString := "Here are your movies:\n"
+	//url := tgbotapi.NewInputMediaPhoto(tgbotapi.FileURL("https://i.imgur.com/unQLJIb.jpg"))
+	//mediaGroup := tgbotapi.NewMediaGroup(update.Message.Chat.ID, []interface{}{
+	//	url,
+	//	url,
+	//	url,
+	//	url,
+	//	url,
+	//})
+	//uh.bot.SendMediaGroup(mediaGroup)
+
+	messageText := "Here are your movies:\n"
 	for _, movie := range movies {
-		msgString += fmt.Sprintf("%s, %f\n", movie.Title, movie.VoteAverage)
+		messageText += fmt.Sprintf("%s, %f\n", movie.Title, movie.VoteAverage)
 	}
 
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, msgString)
-	uh.bot.Send(msg)
+	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, messageText)
+
+	message, err := uh.bot.Send(messageConfig)
+	if err != nil {
+		return nil, fmt.Errorf("send message: %w", err)
+	}
+
+	return &message, nil
 }
 
-func (uh *UpdateHandler) defaultCommand(update *tgbotapi.Update) {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "Unknown command. Type /help to see the available commands.")
-	uh.bot.Send(msg)
+func (uh *UpdateHandler) defaultCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, "Unknown command. Type /help to see the available commands.")
+
+	message, err := uh.bot.Send(messageConfig)
+	if err != nil {
+		return nil, fmt.Errorf("send message: %w", err)
+	}
+
+	return &message, nil
 }
 
-func (uh *UpdateHandler) nonCommand(update *tgbotapi.Update) {
-	msg := tgbotapi.NewMessage(update.Message.Chat.ID, "I didn't understand that command. Type /help for a list of commands.")
-	uh.bot.Send(msg)
+func (uh *UpdateHandler) nonCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, "I didn't understand that command. Type /help for a list of commands.")
+
+	message, err := uh.bot.Send(messageConfig)
+	if err != nil {
+		return nil, fmt.Errorf("send message: %w", err)
+	}
+
+	return &message, nil
 }
