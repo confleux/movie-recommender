@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"tg-bot/internal/service"
@@ -28,60 +27,60 @@ func NewUpdateHandler(bot *tgbotapi.BotAPI, movieService *service.MovieService) 
 	return &UpdateHandler{bot: bot, movieService: movieService, commands: commands}
 }
 
-func (uh *UpdateHandler) ProcessUpdate(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+func (uh *UpdateHandler) ProcessUpdate(update *tgbotapi.Update) error {
 	if update.Message.IsCommand() {
 		switch update.Message.Command() {
 		case "start":
-			message, err := uh.startCommand(update)
+			err := uh.startCommand(update)
 			if err != nil {
-				return nil, fmt.Errorf("start command: %w", err)
+				return fmt.Errorf("start command: %w", err)
 			}
 
-			return message, nil
+			return nil
 		case "help":
-			message, err := uh.helpCommand(update)
+			err := uh.helpCommand(update)
 			if err != nil {
-				return nil, fmt.Errorf("help command: %w", err)
+				return fmt.Errorf("help command: %w", err)
 			}
 
-			return message, nil
+			return nil
 		case "random":
-			message, err := uh.randomCommand(update)
+			err := uh.randomCommand(update)
 			if err != nil {
-				return nil, fmt.Errorf("random command: %w", err)
+				return fmt.Errorf("random command: %w", err)
 			}
 
-			return message, nil
+			return nil
 		default:
-			message, err := uh.defaultCommand(update)
+			err := uh.defaultCommand(update)
 			if err != nil {
-				return nil, fmt.Errorf("default command: %w", err)
+				return fmt.Errorf("default command: %w", err)
 			}
 
-			return message, nil
+			return nil
 		}
 	} else {
-		message, err := uh.nonCommand(update)
+		err := uh.nonCommand(update)
 		if err != nil {
-			return nil, fmt.Errorf("non command: %w", err)
+			return fmt.Errorf("non command: %w", err)
 		}
 
-		return message, nil
+		return nil
 	}
 }
 
-func (uh *UpdateHandler) startCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+func (uh *UpdateHandler) startCommand(update *tgbotapi.Update) error {
 	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, "ГООООЛ")
 
-	message, err := uh.bot.Send(messageConfig)
+	_, err := uh.bot.Send(messageConfig)
 	if err != nil {
-		return nil, fmt.Errorf("send message: %w", err)
+		return fmt.Errorf("send message: %w", err)
 	}
 
-	return &message, nil
+	return nil
 }
 
-func (uh *UpdateHandler) helpCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+func (uh *UpdateHandler) helpCommand(update *tgbotapi.Update) error {
 	messageText := "Here are available commands:\n"
 	for _, cmd := range uh.commands {
 		messageText += fmt.Sprintf("/%s - %s\n", cmd.name, cmd.description)
@@ -89,70 +88,68 @@ func (uh *UpdateHandler) helpCommand(update *tgbotapi.Update) (*tgbotapi.Message
 
 	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, messageText)
 
-	message, err := uh.bot.Send(messageConfig)
+	_, err := uh.bot.Send(messageConfig)
 	if err != nil {
-		return nil, fmt.Errorf("send message: %w", err)
+		return fmt.Errorf("send message: %w", err)
 	}
 
-	return &message, nil
+	return nil
 }
 
-func (uh *UpdateHandler) randomCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+func (uh *UpdateHandler) randomCommand(update *tgbotapi.Update) error {
 	movies, err := uh.movieService.GetRandomMovies(10)
 	if err != nil {
 		messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, "Failed to get movies")
 
-		message, err := uh.bot.Send(messageConfig)
+		_, err := uh.bot.Send(messageConfig)
 		if err != nil {
-			return nil, fmt.Errorf("send message: %w", err)
+			return fmt.Errorf("send message: %w", err)
 		}
 
-		return &message, nil
+		return nil
 	}
 
-	//url := tgbotapi.NewInputMediaPhoto(tgbotapi.FileURL("https://i.imgur.com/unQLJIb.jpg"))
-	//mediaGroup := tgbotapi.NewMediaGroup(update.Message.Chat.ID, []interface{}{
-	//	url,
-	//	url,
-	//	url,
-	//	url,
-	//	url,
-	//})
-	//uh.bot.SendMediaGroup(mediaGroup)
-
-	messageText := "Here are your movies:\n"
 	for _, movie := range movies {
-		messageText += fmt.Sprintf("%s, %f\n", movie.Title, movie.VoteAverage)
+		photoConfig := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(fmt.Sprintf("https://image.tmdb.org/t/p/w1280/%s", movie.PosterPath)))
+
+		messageText := fmt.Sprintf("Title: %s\nAverage Vote: %.2f\nRelease Date: %s\n", movie.Title, movie.VoteAverage, movie.ReleaseDate.Format("02/01/06"))
+
+		photoConfig.Caption = messageText
+		photoConfig.ParseMode = tgbotapi.ModeMarkdown
+
+		inlineKeyboardButton := tgbotapi.NewInlineKeyboardButtonURL("Open TMDB movie page", fmt.Sprintf("https://www.themoviedb.org/movie/%d", movie.Id))
+		inlineKeyboard := tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(inlineKeyboardButton),
+		)
+
+		photoConfig.ReplyMarkup = inlineKeyboard
+
+		if _, err := uh.bot.Send(photoConfig); err != nil {
+			return fmt.Errorf("send message: %w", err)
+		}
 	}
 
-	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, messageText)
-
-	message, err := uh.bot.Send(messageConfig)
-	if err != nil {
-		return nil, fmt.Errorf("send message: %w", err)
-	}
-
-	return &message, nil
+	return nil
 }
 
-func (uh *UpdateHandler) defaultCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+func (uh *UpdateHandler) defaultCommand(update *tgbotapi.Update) error {
 	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, "Unknown command. Type /help to see the available commands.")
 
-	message, err := uh.bot.Send(messageConfig)
+	_, err := uh.bot.Send(messageConfig)
 	if err != nil {
-		return nil, fmt.Errorf("send message: %w", err)
+		return fmt.Errorf("send message: %w", err)
 	}
 
-	return &message, nil
+	return nil
 }
 
-func (uh *UpdateHandler) nonCommand(update *tgbotapi.Update) (*tgbotapi.Message, error) {
+func (uh *UpdateHandler) nonCommand(update *tgbotapi.Update) error {
 	messageConfig := tgbotapi.NewMessage(update.Message.Chat.ID, "I didn't understand that command. Type /help for a list of commands.")
 
-	message, err := uh.bot.Send(messageConfig)
+	_, err := uh.bot.Send(messageConfig)
 	if err != nil {
-		return nil, fmt.Errorf("send message: %w", err)
+		return fmt.Errorf("send message: %w", err)
 	}
 
-	return &message, nil
+	return nil
 }

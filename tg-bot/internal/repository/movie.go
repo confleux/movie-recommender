@@ -17,7 +17,7 @@ func NewMovieRepository(pool *pgxpool.Pool) *MovieRepository {
 
 func (mr *MovieRepository) GetRandomMovies(ctx context.Context, count int) ([]model.Movie, error) {
 	query := `
-		SELECT title, vote_average from movies_info
+		SELECT id, title, vote_average, release_date, poster_path from movies_info
 		ORDER BY RANDOM()
 		LIMIT $1
   `
@@ -33,7 +33,7 @@ func (mr *MovieRepository) GetRandomMovies(ctx context.Context, count int) ([]mo
 	for rows.Next() {
 		tmp := model.Movie{}
 
-		if err := rows.Scan(&tmp.Title, &tmp.VoteAverage); err != nil {
+		if err := rows.Scan(&tmp.Id, &tmp.Title, &tmp.VoteAverage, &tmp.ReleaseDate, &tmp.PosterPath); err != nil {
 			return nil, fmt.Errorf("scan rows: %w", err)
 		}
 

@@ -38,9 +38,11 @@ func main() {
 
 	updates := bot.GetUpdatesChan(u)
 	for update := range updates {
-		_, err := updateHandler.ProcessUpdate(&update)
-		if err != nil {
-			log.Printf("process update: %v", err)
-		}
+		go func() {
+			err := updateHandler.ProcessUpdate(&update)
+			if err != nil {
+				log.Printf("process update: %v", err)
+			}
+		}()
 	}
 }
