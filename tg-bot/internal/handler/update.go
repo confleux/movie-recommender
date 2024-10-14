@@ -2,6 +2,7 @@ package handler
 
 import (
 	"fmt"
+
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 
 	"tg-bot/internal/service"
@@ -112,7 +113,7 @@ func (uh *UpdateHandler) randomCommand(update *tgbotapi.Update) error {
 	for _, movie := range movies {
 		photoConfig := tgbotapi.NewPhoto(update.Message.Chat.ID, tgbotapi.FileURL(fmt.Sprintf("https://image.tmdb.org/t/p/w1280/%s", movie.PosterPath)))
 
-		messageText := fmt.Sprintf("Title: %s\nAverage Vote: %.2f\nRelease Date: %s\n", movie.Title, movie.VoteAverage, movie.ReleaseDate.Format("02/01/06"))
+		messageText := fmt.Sprintf("Title: %s\nAverage Vote: %.2f\nRelease Date: %s\n", movie.Title, movie.VoteAverage, movie.ReleaseDate.Format("02/01/2006"))
 
 		photoConfig.Caption = messageText
 		photoConfig.ParseMode = tgbotapi.ModeMarkdown

@@ -3,7 +3,9 @@ package repository
 import (
 	"context"
 	"fmt"
+
 	"github.com/jackc/pgx/v5/pgxpool"
+
 	"tg-bot/internal/model"
 )
 
